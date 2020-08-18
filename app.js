@@ -78,7 +78,7 @@ try {
         })
     
         socket.on('make room', (data) => {
-            console.log(data)
+            io.emit('send message', `メッセージを${data}から受け取りました`)
             const roomId = uuidv4()
             const name = data.name
             const password = data.password
