@@ -78,6 +78,7 @@ try {
         })
     
         socket.on('make room', (data) => {
+            console.log(data)
             const roomId = uuidv4()
             const name = data.name
             const password = data.password
