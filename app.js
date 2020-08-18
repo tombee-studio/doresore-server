@@ -39,12 +39,22 @@ try {
     const rooms = new Proxy(_rooms, {
         set: (target, name, value) => {
             Reflect.set(target, name, value)
-            io.emit('update rooms', JSON.stringify(Object.values(rooms)))
+            io.emit('update rooms', rooms.map((item) => {
+                return {
+                    room_id: item.roomId,
+                    name: item.name
+                }
+            }))
             return true
         },
         deleteProperty: function(target, prop) {
             Reflect.deleteProperty(target, prop)
-            io.emit('update rooms', JSON.stringify(Object.values(rooms)))
+            io.emit('update rooms', rooms.map((item) => {
+                return {
+                    room_id: item.roomId,
+                    name: item.name
+                }
+            }))
             return true
         }
     })
