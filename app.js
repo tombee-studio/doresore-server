@@ -136,7 +136,7 @@ try {
                     'people': '1/3',
                     'pass': room.password,
                     'image': "",
-                    'room_name': room.room_name
+                    'room_id': room.room_name
                 } 
             })
             const d = {'number': roomInfo.length}
