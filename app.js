@@ -48,6 +48,8 @@ try {
             return true
         }
     })
+
+    users['testuser'] = new User('testuser', 'taro', null)
     
     app.get('/' , (req, res) => {
         res.sendFile(__dirname + '/public/index.html')
