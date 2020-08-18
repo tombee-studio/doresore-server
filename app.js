@@ -138,7 +138,11 @@ try {
                     'room_name': room.room_name
                 } 
             })
-            socket.emit('return_name', roomInfo)
+            const data = {'number': roomInfo.length}
+            for(const index of roomInfo.keys()) {
+                data[index] = roomInfo[index]
+            }
+            socket.emit('return_name', data)
         })
     
         socket.on('start game', (data) => {
