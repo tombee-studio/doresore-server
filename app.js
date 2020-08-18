@@ -129,6 +129,7 @@ try {
         })
     
         socket.on('search_room', (data) => {
+            console.log('ACHIEVE')
             const roomInfo = Object.values(rooms).map((room) => { 
                 return { 
                     'owner_name': room._host.name,
