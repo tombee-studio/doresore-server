@@ -60,12 +60,6 @@ io.on('connection', (socket) => {
             userId = uuidv4()
             socket.emit('generate user id', userId)
         }
-        if(userId in users) {
-            const user = users[userId]
-            if(user.room) {
-                io.join(user.room.room_id)
-            }
-        }
     })
 
     socket.on('login', (data) => {

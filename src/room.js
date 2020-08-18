@@ -60,7 +60,6 @@ export default class Room {
     }
 
     start(io) {
-        console.log(this.labels)
         io.sockets.in(this.room_id).emit('send labels', this.labels)
         io.sockets.in(this.room_id).emit('send count', this.limitTime)
         this.subscriber = Observable.interval(1000)
