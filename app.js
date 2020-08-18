@@ -143,6 +143,7 @@ try {
             for(const index of roomInfo.keys()) {
                 d[index] = roomInfo[index]
             }
+            console.log(d)
             socket.emit('return_room', d)
         })
     
