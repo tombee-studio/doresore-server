@@ -138,11 +138,11 @@ try {
                     'room_name': room.room_name
                 } 
             })
-            const data = {'number': roomInfo.length}
+            const d = {'number': roomInfo.length}
             for(const index of roomInfo.keys()) {
-                data[index] = roomInfo[index]
+                d[index] = roomInfo[index]
             }
-            socket.emit('return_name', data)
+            socket.emit('return_name', d)
         })
     
         socket.on('start game', (data) => {
