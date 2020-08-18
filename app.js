@@ -131,8 +131,11 @@ try {
         socket.on('search_room', (data) => {
             const roomInfo = Object.values(rooms).map((room) => { 
                 return { 
-                    'name': room.name,
-                    'roomId': room.room_id
+                    'owner_name': room._host.name,
+                    'people': '1/3',
+                    'pass': room.password,
+                    'image': "",
+                    'room_name': room.room_name
                 } 
             })
             socket.emit('return_name', roomInfo)
