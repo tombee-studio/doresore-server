@@ -1,0 +1,7 @@
+node_modules/
+package-lock.json
+keyfile.json
+test*
+.env
+env.sh
+keyFile.json

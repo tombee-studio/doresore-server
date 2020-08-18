@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>チャットアプリをつくってみよう</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+  <script>
+    var socket = io();
+    $(function () {
+        $('#register_user').submit(function() {
+          socket.emit('login', {
+            userId: sessionStorage.getItem('user id'),
+            name: $('#user_name').val()
+          });
+          $('#room_name').val('');
+          $('#room_password').val('');
+          $("#btn_register_user").prop("disabled", true);
+          return false;
+        });
+
+        $('#make_room_form').submit(function() {
+          socket.emit('make room', {
+            userId: sessionStorage.getItem('user id'),
+            name: $('#room_name').val(),
+            password: $('#room_password').val(),
+            num_members: $('#num-members').val()
+          });
+          $('#room_name').val('');
+          $('#room_password').val('');
+          $('#num-members').val('');
+          $("#btn_make_room").prop("disabled", true);
+          return false;
+        });
+
+        $('#form_send_image').submit(function() {
+          data = {
+            userId: sessionStorage.getItem('user id'),
+            buffer: $('#data_send_image').val()
+          }
+          socket.emit('send image', data);
+          return false;
+        });
+
+        $('#form_join_room').submit(function() {
+          data = {
+            userId: sessionStorage.getItem('user id'),
+            roomId: $('#input_join_room').val()
+          }
+          socket.emit('join room', data);
+          return false;
+        });
+
+        $('#frm_search').submit(function() {
+          data = {
+            userId: sessionStorage.getItem('user id'),
+          }
+          socket.emit('search_room', data);
+          return false;
+        });
+
+        $('#frm_start_game').submit(function() {
+          data = {
+            userId: sessionStorage.getItem('user id'),
+          }
+          socket.emit('start game', data);
+          return false;
+        });
+
+        $('#form_logout').submit(function() {
+            socket.emit('logout', sessionStorage.getItem('user id'));
+            return false;
+        });
+
+        socket.on('send message', function(message) {
+            $('#messages').append($('<li>').text(message));
+        });
+
+        socket.on('update login users', function(num_login_users) {
+            $('#num_login_user').text(`${num_login_users}人がログインしています`)
+        })
+
+        socket.on('update rooms', function(rooms) {
+            rooms = JSON.parse(rooms);
+            console.log(rooms);
+            ids = rooms.map(item => item.room_id);
+            $('#num_rooms').text(`ルームが${ids}`)
+        })
+
+        socket.on('check user id', function(data) {
+            socket.emit('send user id', sessionStorage.getItem('user id'));
+        })
+
+        socket.on('generate user id', function(data) {
+          sessionStorage.setItem('user id', data);
+          $('#messages').append($('<li>').text(sessionStorage.getItem('user id')));
+        })
+
+        socket.on('join new', function(data) {
+          console.log(data)
+          const members = data.members.map((user) => user.name)
+          $('#messages').append($('<li>').text(`${data.room} に ${members} が参加しています`));
+        })
+
+        socket.on('join room', function(data) {
+          $('#messages').append($('<li>').text(`${data.name} に参加しました`));
+        })
+
+        socket.on('you are host', function(room) {
+          $('#messages').append($('<li>').text(`${room.name} のホストです`));
+        })
+
+        socket.on('return_name', function(data) {
+          console.log(data)
+          $('#rooms').text();
+          for(var d of data) {
+            $('#rooms').append($('<li>').text(`${d.name}: ${d.roomId}`))
+          }
+        })
+
+        socket.on('send count', function(time) {
+          $('#count-down').text(time);
+        })
+
+        socket.on('time over', function(info) {
+          $('#count-down').text('TIME OVER!!');
+        })
+
+        socket.on('send labels', function(labels) {
+          console.log(labels)
+          $('#labels').text(labels.map((item) => item.name));
+        })
+
+        socket.on('runtime error', function(info) {
+          console.log(info);
+        })
+    });
+  </script>
+</head>
+<body>
+  <h1>チャットアプリをつくってみよう</h1>
+  <ul id='user_id'></ul>
+  <h3 id='count-down'></h3>
+  <h6 id='num_login_user'></h6>
+  <h6 id='num_rooms'></h6>
+  <h6 id='labels'></h6>
+  <ul id="rooms"></ul>
+  <ul id="messages"></ul>
+  <form id="register_user" action="">
+    <input id="user_name" autocomplete="off">
+    <button id="btn_register_user">ユーザー登録</button>
+  </form>
+  <form id="make_room_form" action="">
+    <input id="room_name" autocomplete="off">
+    <input id="room_password" type="password" autocomplete="off">
+    <input id="num-members" autocomplete="off">
+    <button id="btn_make_room">ルーム作成</button>
+  </form>
+  <form id="form_join_room" action="">
+    <input id="input_join_room" autocomplete="off">
+    <button id="btn_join">ルーム参加</button>
+  </form>
+  <form id="form_send_image" action="">
+    <input id="data_send_image" autocomplete="off">
+    <button id="btn_send_image">画像(base64)を送信</button>
+  </form>
+  <form id="frm_search" action="">
+    <button id="btn_search">ルーム検索</button>
+  </form>
+  <form id="frm_start_game" action="">
+    <button id="btn_start_game">ゲームスタート</button>
+  </form>
+  <form id="form_logout" action="">
+    <button id="btn_logout">ログアウト</button>
+  </form>
+</body>
+</html>
