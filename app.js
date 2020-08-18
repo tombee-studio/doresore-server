@@ -17,7 +17,7 @@ const app = express()
 const http = Server(app)
 const io = SocketIO(http)
 const ifaces = os.networkInterfaces()
-const IP = ifaces['en0'][1]['address']
+// const IP = ifaces['en0'][1]['address']
 
 const _users = {}
 const _rooms = {}
@@ -159,5 +159,5 @@ io.on('connection', (socket) => {
 
 http.listen(PORT, () => {
     console.log(`Local:   http://localhost:${PORT}/`)
-    console.log(`Network: http://${IP}:${PORT}/`)
+    // console.log(`Network: http://${IP}:${PORT}/`)
 })
