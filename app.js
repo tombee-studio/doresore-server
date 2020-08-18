@@ -55,6 +55,11 @@ try {
     
     io.on('connection', (socket) => {
         socket.emit('check user id')
+
+        socket.on('test', (data) => {
+            console.log(data)
+            io.emit('send message', data)
+        })
     
         socket.on('send user id', (userId) => {
             if(!userId) {
