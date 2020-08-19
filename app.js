@@ -59,8 +59,12 @@ try {
         }
     })
 
-    users['testuser'] = new User('testuser', 'taro', null)
-    rooms['0404'] = new Room('0404', '0404', '0000', 3)
+    const u = users['testuser'] = new User('testuser', 'taro', null)
+    const r = rooms['0000'] = new Room('0000', '0000', '0000', 3)
+    u.join(null, r)
+    r.join(null, u)
+    r.host(null, u)
+    u.host(null, r)
     
     app.get('/' , (req, res) => {
         res.sendFile(__dirname + '/public/index.html')

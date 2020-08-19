@@ -42,20 +42,22 @@ export default class Room {
 
     join(io, user) {
         this.members.push(user)
-        io.sockets.in(this.room_id).emit('join new', { 
-            'room': this.name, 
-            'members': this.members.map((user) => {
-                return {
-                    'name': user.name, 
-                    'icon': user.icon
-                }
+        if(io)
+            io.sockets.in(this.room_id).emit('join new', { 
+                'room': this.name, 
+                'members': this.members.map((user) => {
+                    return {
+                        'name': user.name, 
+                        'icon': user.icon
+                    }
+                })
             })
-        })
     }
 
     host(io, user) {
         this._host = user
-        io.sockets.in(this.room_id).emit('send message', `${this.name} のホストは ${user.name} になりました`)
+        if(io)
+            io.sockets.in(this.room_id).emit('send message', `${this.name} のホストは ${user.name} になりました`)
     }
 
     start(io) {
