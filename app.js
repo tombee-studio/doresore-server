@@ -60,6 +60,7 @@ try {
     })
 
     users['testuser'] = new User('testuser', 'taro', null)
+    rooms['0404'] = new Room('0404', '0404', '0000', 3)
     
     app.get('/' , (req, res) => {
         res.sendFile(__dirname + '/public/index.html')
