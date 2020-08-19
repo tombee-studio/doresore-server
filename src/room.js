@@ -11,7 +11,7 @@ export default class Room {
         this.password = password
         this.numMembers = numMember
         this.limitTime = Number(process.env.LIMIT_TIME)
-        this.labels = this.random(Dataset, 5).map((item) => {
+        this.labels = this.random(Dataset, 10).map((item) => {
             item.buffer = null
             item.isOccupied = false
             return item
@@ -42,38 +42,62 @@ export default class Room {
 
     join(io, user) {
         this.members.push(user)
+
+        const memebersData = this.members.map((user) => {
+            return {
+                'user_Id': this.user_id,
+                'user_name': this.name,
+                'icon': this.icon,
+                'your_host': this._host != null
+            }
+        })
+
+        const data = {
+            'room': {
+                'name': this.name,
+                'pass': this.password,
+                'members': `${this.members.length}/${this.numMembers}`,
+                'hostId': this._host.user_Id
+            }
+        }
+
+        for(let i = 0; i < memebersData.length; i++) {
+            data[i] = memebersData[i]
+        }
+
+        data['numbers'] = memebersData.length
+
         if(io)
-            io.sockets.in(this.room_id).emit('join new', { 
-                'room': this.name, 
-                'members': this.members.map((user) => {
-                    return {
-                        'name': user.name, 
-                        'icon': user.icon
-                    }
-                })
-            })
+            io.sockets.in(this.room_id).emit('join room', data)
     }
 
     host(io, user) {
         this._host = user
+        this.join(io, user)
         if(io)
             io.sockets.in(this.room_id).emit('send message', `${this.name} のホストは ${user.name} になりました`)
     }
 
     start(io) {
-        io.sockets.in(this.room_id).emit('send labels', this.labels)
-        io.sockets.in(this.room_id).emit('send count', this.limitTime)
-        this.subscriber = Observable.interval(1000)
-            .timeInterval()
-            .take(this.limitTime).subscribe((x) => {
-                io.sockets.in(this.room_id).emit('send count', this.limitTime - x.value - 1)
-            }, (err) => {
-                console.log(err)
-            }, () => {
-                setImmediate(()=>{
-                    io.sockets.in(this.room_id).emit('time over')
-                }, 1000)
-            })
+        const names = this.labels.map((item) => item.name).join(',')
+        const icons = this.labels.map((item) => item.icon).join(',')
+        console.log(names)
+        io.sockets.in(this.room_id).emit('item_receive', {
+            'player_icon_names': names,
+            'seikai_item_data': icons
+        })
+        io.sockets.in(this.room_id).emit('time_recieve', this.limitTime)
+        // this.subscriber = Observable.interval(1000)
+        //     .timeInterval()
+        //     .take(this.limitTime).subscribe((x) => {
+        //         io.sockets.in(this.room_id).emit('time_recieve', this.limitTime - x.value - 1)
+        //     }, (err) => {
+        //         console.log(err)
+        //     }, () => {
+        //         setImmediate(()=>{
+        //             io.sockets.in(this.room_id).emit('time over')
+        //         }, 1000)
+        //     })
     }
 
     judge(socket, io, buffer, value) {

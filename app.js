@@ -61,8 +61,6 @@ try {
 
     const u = users['testuser'] = new User('testuser', 'taro', null)
     const r = rooms['0000'] = new Room('0000', '0000', '0000', 3)
-    u.join(null, r)
-    r.join(null, u)
     r.host(null, u)
     u.host(null, r)
     
@@ -108,12 +106,10 @@ try {
             const numMembers = data.num_members
             const room = new Room(roomId, name, password, numMembers)
             const user = users[data.userId]
+            socket.join(roomId)
             rooms[roomId] = room
-            user.join(socket, room)
-            room.join(io, user)
             room.host(io, user)
             user.host(socket, room)
-            socket.join(roomId)
         })
     
         socket.on('join room', (data) => {
@@ -122,9 +118,9 @@ try {
             const password = data.password
     
             if(room.isJoinable()) {
+                socket.join(data.roomId)
                 user.join(socket, room)
                 room.join(io, user)
-                socket.join(room.room_id)
             } else {
                 socket.emit('runtime error', {
                     'code': 10,

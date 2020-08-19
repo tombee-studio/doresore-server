@@ -17,15 +17,12 @@ export default class User {
     }
 
     host(socket, room) {
+        this.join(socket, room)
         this._host = room
-        if(socket)
-            socket.emit('you are host', { 'name': room.name })
     }
 
     join(socket, room) {
         this.room = room
-        if(socket)
-            socket.emit('join room', { 'name': room.name })
     }
 
     logout() {
