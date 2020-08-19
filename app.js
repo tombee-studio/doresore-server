@@ -88,13 +88,14 @@ try {
         socket.on('login', (data) => {
             const user_id = data.userId
             const name = data.name
+            const icon = data.icon
             if(user_id in users) {
                 socket.emit('runtime error', {
                     'code': 20,
                     'message': 'ユーザIDはすでにログインしています'
                 })
             } else {
-                users[user_id] = new User(user_id, name, null, socket)
+                users[user_id] = new User(user_id, name, icon)
                 socket.broadcast.emit('send message', `${name} が参加しました`)
             }
         })
