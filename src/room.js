@@ -120,8 +120,10 @@ export default class Room {
         if(array.length > 0) {
             io.in(this.room_id).emit('other succeed', this.labels)
             socket.emit('succeed', this.labels)
+            console.log('succeed')
         } else {
             socket.emit('failure')
+            console.log('failure')
         }
     }
 
