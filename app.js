@@ -148,6 +148,7 @@ try {
         })
     
         socket.on('start game', (data) => {
+            console.log(data)
             const user = users[data.userId]
             if(user.room) {
                 user.room.start(io)
