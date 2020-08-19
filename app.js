@@ -69,6 +69,7 @@ try {
     })
     
     io.on('connection', (socket) => {
+        console.log(`${socket.id} connected`)
         socket.emit('check user id')
 
         socket.on('test', (data) => {
@@ -77,9 +78,14 @@ try {
         })
     
         socket.on('send user id', (userId) => {
+            console.log(`${userId} comes`)
             if(!userId) {
                 userId = uuidv4()
                 socket.emit('generate user id', userId)
+            }
+
+            if(userId == 'testuser') {
+                socket.join(users['testuser'].room.room_id)
             }
         })
     

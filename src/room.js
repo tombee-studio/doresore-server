@@ -43,7 +43,7 @@ export default class Room {
     join(io, user) {
         this.members.push(user)
 
-        const memebersData = this.members.map((user) => {
+        const membersData = this.members.map((user) => {
             return {
                 'user_Id': this.user_id,
                 'user_name': this.name,
@@ -61,11 +61,11 @@ export default class Room {
             }
         }
 
-        for(let i = 0; i < memebersData.length; i++) {
-            data[i] = memebersData[i]
+        for(let i = 0; i < membersData.length; i++) {
+            data[i] = membersData[i]
         }
 
-        data['numbers'] = memebersData.length
+        data['numbers'] = membersData.length
 
         if(io)
             io.sockets.in(this.room_id).emit('join room', data)
