@@ -107,6 +107,7 @@ export default class Room {
 
     judge(socket, io, buffer, value) {
         const ARRAY = this.labels.map(item => item.name)
+        console.log(value)
         const array = value.filter(item => {
             return ARRAY.includes(item.name.toLowerCase())
         }).filter(item => {
