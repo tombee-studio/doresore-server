@@ -129,7 +129,6 @@ try {
         })
     
         socket.on('search_room', (data) => {
-            console.log('ACHIEVE')
             const roomInfo = Object.values(rooms).map((room) => { 
                 return { 
                     'owner_name': room._host.name,
@@ -143,7 +142,6 @@ try {
             for(const index of roomInfo.keys()) {
                 d[index] = roomInfo[index]
             }
-            console.log(d)
             socket.emit('return_room', d)
         })
     

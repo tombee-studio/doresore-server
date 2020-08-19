@@ -18,7 +18,6 @@ export default class Room {
         })
         this._host = null
         this.members = []
-        console.log(this.labels)
     }
 
     random(array, num) {
