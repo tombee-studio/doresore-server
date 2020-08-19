@@ -86,6 +86,7 @@ export default class Room {
             'player_icon_names': names,
             'seikai_item_data': icons
         })
+        io.sockets.in(this.room_id).emit('send message', 'GAME START')
         io.sockets.in(this.room_id).emit('time_recieve', this.limitTime)
         // this.subscriber = Observable.interval(1000)
         //     .timeInterval()
