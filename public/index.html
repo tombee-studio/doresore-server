@@ -118,8 +118,8 @@
           }
         })
 
-        socket.on('send count', function(time) {
-          $('#count-down').text(time);
+        socket.on('time_receive', function(data) {
+          $('#count-down').text(data.times);
         })
 
         socket.on('time over', function(info) {
