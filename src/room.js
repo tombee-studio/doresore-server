@@ -122,6 +122,7 @@ export default class Room {
             socket.emit('succeed', this.labels)
             console.log('succeed')
         } else {
+            socket.emit('other succeed', 'You are failed')
             socket.emit('failure')
             console.log('failure')
         }
