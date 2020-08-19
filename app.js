@@ -162,7 +162,6 @@ try {
         })
     
         socket.on('img_send', (data) => {
-            console.log(data)
             const buffer = data.buffer
             const user = users[data.userId]
             try {
