@@ -161,7 +161,8 @@ try {
             }
         })
     
-        socket.on('send image', (data) => {
+        socket.on('image_send', (data) => {
+            console.log(data)
             const buffer = data.buffer
             const user = users[data.userId]
             try {

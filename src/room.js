@@ -118,6 +118,7 @@ export default class Room {
             return deltax > 0.5 || deltay > 0.5
         })
         if(array.length > 0) {
+            io.in(this.room_id).emit('other succeed', this.labels)
             socket.emit('succeed', this.labels)
         } else {
             socket.emit('failure')
