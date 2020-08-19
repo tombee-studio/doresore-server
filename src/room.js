@@ -90,17 +90,19 @@ export default class Room {
         io.sockets.in(this.room_id).emit('time_receive', {
             'times': String(this.limitTime)
         })
-        // this.subscriber = Observable.interval(1000)
-        //     .timeInterval()
-        //     .take(this.limitTime).subscribe((x) => {
-        //         io.sockets.in(this.room_id).emit('time_recieve', this.limitTime - x.value - 1)
-        //     }, (err) => {
-        //         console.log(err)
-        //     }, () => {
-        //         setImmediate(()=>{
-        //             io.sockets.in(this.room_id).emit('time over')
-        //         }, 1000)
-        //     })
+        this.subscriber = Observable.interval(1000)
+            .timeInterval()
+            .take(this.limitTime).subscribe((x) => {
+                io.sockets.in(this.room_id).emit('time_receive', {
+                    'times': String(this.limitTime - x.value - 1)
+                })
+            }, (err) => {
+                console.log(err)
+            }, () => {
+                setImmediate(()=>{
+                    io.sockets.in(this.room_id).emit('time over')
+                }, 1000)
+            })
     }
 
     judge(socket, io, buffer, value) {
