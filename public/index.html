@@ -53,7 +53,7 @@
             userId: sessionStorage.getItem('user id'),
             roomId: $('#input_join_room').val()
           }
-          socket.emit('join room', data);
+          socket.emit('enter_room', data);
           return false;
         });
 

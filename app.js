@@ -82,7 +82,6 @@ try {
         })
     
         socket.on('send user id', (userId) => {
-            console.log(`${userId} comes`)
             if(!userId) {
                 userId = uuidv4()
                 socket.emit('generate user id', userId)
@@ -93,8 +92,6 @@ try {
         })
     
         socket.on('login', (data) => {
-            console.log('LOGIN')
-            console.log(data)
             const user_id = data.userId
             const name = data.name
             const icon = 'data:image/jpeg;base64,' + data.icon || TEST_ICON
@@ -110,7 +107,6 @@ try {
         })
     
         socket.on('make room', (data) => {
-            console.log(data)
             const roomId = RoomIDGenerator.use()
             const name = roomId
             const password = data.password
@@ -125,7 +121,6 @@ try {
         })
     
         socket.on('enter_room', (data) => {
-            console.log(data)
             const room = rooms[data.roomId]
             const user = users[String(data.userId)]
     
@@ -193,7 +188,7 @@ try {
                 Vision.getInstance().detect(buffer)
                 .then((value) => {
                     if(user.room)
-                        user.room.judge(socket, io, buffer, value, user.name)
+                        user.room.judge(socket, io, buffer, value, user)
                 }).catch((error) => {
                     console.log(error)
                 })

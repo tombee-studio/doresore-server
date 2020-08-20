@@ -110,29 +110,44 @@ export default class Room {
             })
     }
 
-    judge(socket, io, buffer, value, user_name) {
+    judge(socket, io, buffer, value, user) {
+        console.log(user.name)
         const ARRAY = this.labels
             .filter(item => !item.isOccupied)
             .map(item => item.name)
         const array = value.filter(item => {
             return ARRAY.includes(item.name.toLowerCase())
         }).filter(item => {
-            return item.score > 0.8
+            return item.score > 0.5
         }).filter(item => {
             const bouding = item.boundingPoly.normalizedVertices
             const deltax = bouding[1].x - bouding[0].x
             const deltay = bouding[2].y - bouding[1].y
-            return deltax > 0.5 || deltay > 0.5
+            return deltax > 0.3 || deltay > 0.3
         })
+
+        console.log(this.labels.map(item => {
+            return {
+                'name': item.name,
+                'flag': item.isOccupied
+            }
+        }))
+
+        console.log(value)
 
         if(array.length > 0) {
             array.forEach(elem => {
+                this.labels.filter((item) => item.name == elem.name.toLowerCase()).
+                    forEach(elem => {
+                        elem.isOccupied = true
+                        elem.userId = user.user_id
+                    })
                 io.in(this.room_id).emit('other succeed', {
                     'object_name': elem.name,
-                    'other_name': user_name
+                    'other_name': user.name
                 })
                 socket.emit('you_correct_receive', {
-                    'player_name': user_name,
+                    'player_name': user.name,
                     'obj_name': elem.name
                 })
             })
