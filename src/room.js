@@ -111,7 +111,6 @@ export default class Room {
     }
 
     judge(socket, io, buffer, value, user) {
-        console.log(user.name)
         const ARRAY = this.labels
             .filter(item => !item.isOccupied)
             .map(item => item.name)
@@ -125,15 +124,6 @@ export default class Room {
             const deltay = bouding[2].y - bouding[1].y
             return deltax > 0.3 || deltay > 0.3
         })
-
-        console.log(this.labels.map(item => {
-            return {
-                'name': item.name,
-                'flag': item.isOccupied
-            }
-        }))
-
-        console.log(value)
 
         if(array.length > 0) {
             array.forEach(elem => {
