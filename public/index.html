@@ -32,12 +32,19 @@
           return false;
         });
 
+        $('#frm_ok').submit(function() {
+          socket.emit('change ok', {
+            userId: sessionStorage.getItem('user id')
+          });
+          return false;
+        });
+
         $('#form_send_image').submit(function() {
           data = {
             userId: sessionStorage.getItem('user id'),
             buffer: $('#data_send_image').val()
           }
-          socket.emit('send image', data);
+          socket.emit('img_send', data);
           return false;
         });
 
@@ -66,6 +73,14 @@
           return false;
         });
 
+        $('#frm_leave').submit(function() {
+          data = {
+            userId: sessionStorage.getItem('user id'),
+          }
+          socket.emit('leave', data);
+          return false;
+        });
+
         $('#form_logout').submit(function() {
             socket.emit('logout', sessionStorage.getItem('user id'));
             return false;
@@ -80,7 +95,6 @@
         })
 
         socket.on('update rooms', function(rooms) {
-            rooms = JSON.parse(rooms);
             console.log(rooms);
             ids = rooms.map(item => item.room_id);
             $('#num_rooms').text(`ルームが${ids}`)
@@ -103,7 +117,7 @@
 
         socket.on('join room', function(data) {
           console.log(data)
-          $('#messages').text(`${data.room.name}号室に${data.numbers} 人が参加しています`);
+          $('#messages').append($('<li>').text(`${data.room}号室に${data.number} 人が参加しています`));
         })
 
         socket.on('you are host', function(room) {
@@ -166,6 +180,12 @@
   </form>
   <form id="frm_search" action="">
     <button id="btn_search">ルーム検索</button>
+  </form>
+  <form id="frm_leave" action="">
+    <button id="btn_leave">ルーム退室</button>
+  </form>
+  <form id="frm_ok" action="">
+    <button id="btn_ok">Ready</button>
   </form>
   <form id="frm_start_game" action="">
     <button id="btn_start_game">ゲームスタート</button>

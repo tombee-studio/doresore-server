@@ -2,18 +2,21 @@ import { Observable } from 'rx'
 import { setImmediate } from 'timers'
 import Jimp from 'jimp'
 import Dataset from '../dataset.json'
+import fs from 'fs'
 import sharp from 'sharp'
 
 export default class Room {
-    constructor(room_id, name, password, numMember) {
+    constructor(room_id, name, password, numMembers, icon) {
         this.room_id = room_id
         this.name = name
         this.password = password
-        this.numMembers = numMember
+        this.numMembers = numMembers
+        this.icon = icon
         this.limitTime = Number(process.env.LIMIT_TIME)
         this.labels = this.random(Dataset, 10).map((item) => {
             item.buffer = null
             item.isOccupied = false
+            item.userId = null
             return item
         })
         this._host = null
@@ -40,35 +43,37 @@ export default class Room {
         return this.numMembers > this.members.length
     }
 
-    join(io, user) {
-        this.members.push(user)
-
+    getJoinRoomData() {
         const membersData = this.members.map((user) => {
             return {
-                'user_Id': this.user_id,
-                'user_name': this.name,
-                'icon': this.icon,
-                'your_host': this._host != null
+                'userId': user.user_id,
+                'user_name': user.name,
+                'icon': user.icon,
+                'your_host': user._host === this._host
             }
         })
 
         const data = {
-            'room': {
-                'name': this.name,
-                'pass': this.password,
-                'members': `${this.members.length}/${this.numMembers}`,
-                'hostId': this._host.user_Id
-            }
+            'room': this.name,
+            'pass': this.password,
+            'members': `${this.members.length}/${this.numMembers}`,
+            'hostId': this._host.user_id,
+            'number': membersData.length
         }
 
         for(let i = 0; i < membersData.length; i++) {
-            data[i] = membersData[i]
+            data[String(i)] = membersData[i]
         }
+        return data
+    }
 
-        data['numbers'] = membersData.length
-
-        if(io)
-            io.sockets.in(this.room_id).emit('join room', data)
+    join(io, user) {
+        this.members.push(user)
+        if(io) {
+            setTimeout(() => {
+                io.sockets.in(this.room_id).emit('join room', this.getJoinRoomData())
+            }, 1000)
+        }
     }
 
     host(io, user) {
@@ -99,15 +104,16 @@ export default class Room {
             }, (err) => {
                 console.log(err)
             }, () => {
-                setImmediate(()=>{
+                setImmediate(() => {
                     io.sockets.in(this.room_id).emit('time over')
                 }, 1000)
             })
     }
 
-    judge(socket, io, buffer, value) {
-        const ARRAY = this.labels.map(item => item.name)
-        console.log(value)
+    judge(socket, io, buffer, value, user_name) {
+        const ARRAY = this.labels
+            .filter(item => !item.isOccupied)
+            .map(item => item.name)
         const array = value.filter(item => {
             return ARRAY.includes(item.name.toLowerCase())
         }).filter(item => {
@@ -118,14 +124,20 @@ export default class Room {
             const deltay = bouding[2].y - bouding[1].y
             return deltax > 0.5 || deltay > 0.5
         })
+
         if(array.length > 0) {
-            io.in(this.room_id).emit('other succeed', this.labels)
-            socket.emit('succeed', this.labels)
-            console.log('succeed')
+            array.forEach(elem => {
+                io.in(this.room_id).emit('other succeed', {
+                    'object_name': elem.name,
+                    'other_name': user_name
+                })
+                socket.emit('you_correct_receive', {
+                    'player_name': user_name,
+                    'obj_name': elem.name
+                })
+            })
         } else {
-            socket.emit('other succeed', 'You are failed')
-            socket.emit('failure')
-            console.log('failure')
+            socket.emit('you_false_receive')
         }
     }
 
@@ -133,7 +145,9 @@ export default class Room {
         if(this.subscriber) this.subscriber.unsubscribe()
     }
 
-    leave(socketID) {
-        
+    leave(user, socket, io) {
+        socket.leave(this.room_id)
+        this.members = this.members.filter((u) => u !== user)
+        io.in(this.room_id).emit('send message', `${user.name} が退室しました`)
     }
 }

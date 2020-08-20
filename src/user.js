@@ -5,27 +5,32 @@ export default class User {
         this.icon = icon
         this.room = null
         this._host = null
-        this._isReady = false
+        this._isOK = false
     }
 
-    ready() {
-        this._isReady = true
+    ok() {
+        this._isOK = true
     }
 
-    isReady() {
-        return this._isReady
+    isOK() {
+        return this._isOK
     }
 
     host(socket, room) {
         this.join(socket, room)
         this._host = room
+        this._isOK = true
     }
 
     join(socket, room) {
         this.room = room
     }
 
-    logout() {
-        if(this.room) this.room.leave(this)
+    leave(socket, io) {
+        if(this.room) this.room.leave(this, socket, io)
+    }
+
+    logout(socket, io) {
+        if(this.room) this.room.leave(this, socket, io)
     }
 }

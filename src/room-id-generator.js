@@ -23,8 +23,8 @@ class _RoomIDGenerator {
     }
 
     use() {
-        const L = this.roomIDs
-        const roomID = this.roomIDs[Math.floor(Math.random() * L) % L]
+        const L = this.roomIDs.length
+        const roomID = this.roomIDs[Math.floor(Math.random() * L)]
         this.roomIDs = this.roomIDs.filter(n => n != roomID)
         return roomID
     }

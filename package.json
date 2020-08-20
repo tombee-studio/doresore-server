@@ -4,7 +4,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start": "babel-node app.js",
+    "debug": "babel-node .",
+    "start": "node build/bundle.js",
     "test": "babel-node test-sub.js"
   },
   "author": "",
@@ -14,7 +15,11 @@
     "@babel/core": "^7.11.1",
     "@babel/node": "^7.10.5",
     "@babel/preset-env": "^7.11.0",
-    "json-loader": "^0.5.7"
+    "babel-loader": "^8.1.0",
+    "json-loader": "^0.5.7",
+    "watch": "^1.0.2",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12"
   },
   "dependencies": {
     "@babel/plugin-proposal-class-properties": "^7.10.4",

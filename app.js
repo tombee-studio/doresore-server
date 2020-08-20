@@ -8,16 +8,20 @@ import sharp from 'sharp'
 import { config } from 'dotenv'
 import { Server } from 'http'
 import { v4 as uuidv4 } from 'uuid'
+import RoomIDGenerator from './src/room-id-generator'
 
 config()
 
-const PORT = process.env.PORT || 3000;
+RoomIDGenerator.generate('123', 3)
 
 const app = express()
 const http = Server(app)
 const io = SocketIO(http)
 const ifaces = os.networkInterfaces()
-// const IP = ifaces['en0'][1]['address']
+const TEST_ICON = process.env["TEST_ICON"]
+
+const PORT = process.env.PORT || 3000;
+const IP   = ifaces['en0'][1].address || '0.0.0.0'
 
 const _users = {}
 const _rooms = {}
@@ -59,8 +63,8 @@ try {
         }
     })
 
-    const u = users['testuser'] = new User('testuser', 'taro', null)
-    const r = rooms['0000'] = new Room('0000', '0000', '0000', 3)
+    const u = users['testuser'] = new User('testuser', 'taro', TEST_ICON)
+    const r = rooms['0000'] = new Room('0000', '0000', '0000', 100, TEST_ICON)
     r.host(null, u)
     u.host(null, r)
     
@@ -82,17 +86,18 @@ try {
             if(!userId) {
                 userId = uuidv4()
                 socket.emit('generate user id', userId)
-            }
-
-            if(userId == 'testuser') {
-                socket.join(users['testuser'].room.room_id)
+            } else {
+                if(userId in users && users[userId].room)
+                    socket.join(users[userId].room.room_id)
             }
         })
     
         socket.on('login', (data) => {
+            console.log('LOGIN')
+            console.log(data)
             const user_id = data.userId
             const name = data.name
-            const icon = data.icon
+            const icon = 'data:image/jpeg;base64,' + data.icon || TEST_ICON
             if(user_id in users) {
                 socket.emit('runtime error', {
                     'code': 20,
@@ -105,23 +110,24 @@ try {
         })
     
         socket.on('make room', (data) => {
-            io.emit('send message', `メッセージを${data}から受け取りました`)
-            const roomId = uuidv4()
-            const name = data.name
+            console.log(data)
+            const roomId = RoomIDGenerator.use()
+            const name = roomId
             const password = data.password
             const numMembers = data.num_members
-            const room = new Room(roomId, name, password, numMembers)
+            const room = new Room(roomId, name, password, numMembers, TEST_ICON)
             const user = users[data.userId]
+            io.emit('send message', `${roomId}が${user.name}によって作られました`)
             socket.join(roomId)
             rooms[roomId] = room
             room.host(io, user)
             user.host(socket, room)
         })
     
-        socket.on('join room', (data) => {
+        socket.on('enter_room', (data) => {
+            console.log(data)
             const room = rooms[data.roomId]
-            const user = users[data.userId]
-            const password = data.password
+            const user = users[String(data.userId)]
     
             if(room.isJoinable()) {
                 socket.join(data.roomId)
@@ -142,8 +148,8 @@ try {
                     'owner_name': room._host.name,
                     'people': '1/3',
                     'pass': room.password,
-                    'image': "",
-                    'room_id': room.room_name
+                    'image': room.icon,
+                    'room_id': room.name
                 } 
             })
             const d = {'number': roomInfo.length}
@@ -152,23 +158,42 @@ try {
             }
             socket.emit('return_room', d)
         })
-    
-        socket.on('start game', (data) => {
-            console.log(data)
+
+        socket.on('leave room', (data) => {
             const user = users[data.userId]
+            user.leave(socket, io)
+        })
+
+        socket.on('change ok', (data) => {
+            const user = users[data.userId]
+            const d = {}
             if(user.room) {
-                user.room.start(io)
+                user.ok()
+                const okData = user.room.members.map(user => {
+                    return { 'is_ok': user.isOK() }
+                })
+                d['number'] = okData.length
+                d['num_members'] = user.room.numMembers
+                okData.forEach((element, index) => { d[index] = element });
+                d['is_all_ok'] = Object.values(okData).every(item => item['is_ok'])
+                io.in(user.room.roomId).emit('is ok', d)
             }
         })
     
+        socket.on('start game', (data) => {
+            const user = users[data.userId]
+            if(user.room) user.room.start(io)
+        })
+    
         socket.on('img_send', (data) => {
+            console.log(`img_send ${data.userId}`)
             const buffer = data.buffer
             const user = users[data.userId]
             try {
                 Vision.getInstance().detect(buffer)
                 .then((value) => {
                     if(user.room)
-                        user.room.judge(socket, io, buffer, value)
+                        user.room.judge(socket, io, buffer, value, user.name)
                 }).catch((error) => {
                     console.log(error)
                 })
@@ -178,9 +203,10 @@ try {
         })
     
         socket.on('logout', (userId) => {
-            socket.broadcast.emit('send message', `${users[userId].name} がログアウトしました`)
+            const user = users[userId]
+            socket.broadcast.emit('send message', `${user.name} がログアウトしました`)
             if(userId in users) {
-                users[userId].logout()
+                users[userId].logout(socket, io)
                 delete users[userId]
             }
         })
@@ -188,7 +214,7 @@ try {
     
     http.listen(PORT, () => {
         console.log(`Local:   http://localhost:${PORT}/`)
-        // console.log(`Network: http://${IP}:${PORT}/`)
+        console.log(`Network: http://${IP}:${PORT}/`)
     })    
 } catch(ex) {
     console.log(ex)
