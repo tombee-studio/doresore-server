@@ -21,7 +21,7 @@ const ifaces = os.networkInterfaces()
 const TEST_ICON = process.env["TEST_ICON"]
 
 const PORT = process.env.PORT || 3000;
-const IP   = ifaces['en0'][1].address || '0.0.0.0'
+// const IP   = ifaces['en0'][1].address || '0.0.0.0'
 
 const _users = {}
 const _rooms = {}
@@ -209,7 +209,7 @@ try {
     
     http.listen(PORT, () => {
         console.log(`Local:   http://localhost:${PORT}/`)
-        console.log(`Network: http://${IP}:${PORT}/`)
+        // console.log(`Network: http://${IP}:${PORT}/`)
     })    
 } catch(ex) {
     console.log(ex)
