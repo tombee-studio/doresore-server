@@ -6,7 +6,7 @@
   "scripts": {
     "debug": "babel-node .",
     "build": "",
-    "start": "node build/bundle.js",
+    "start": "babel-node app.js",
     "test": "babel-node test-sub.js"
   },
   "author": "",
