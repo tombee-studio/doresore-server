@@ -77,7 +77,7 @@
           data = {
             userId: sessionStorage.getItem('user id'),
           }
-          socket.emit('leave', data);
+          socket.emit('leave room', data);
           return false;
         });
 

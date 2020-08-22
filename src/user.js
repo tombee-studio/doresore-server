@@ -5,7 +5,25 @@ export default class User {
         this.icon = icon
         this.room = null
         this._host = null
+        this._isHost = false
         this._isOK = false
+        this._color = null
+        this._items = []
+    }
+
+    get items() { return this._items }
+    get isHost() { return this._isHost }
+    get color() {
+        if(this._color == null) throw `${this.name} が意図しないアクセスをしました`
+        return this._color
+    }
+    set color(c) {
+        if(this._color) throw `${this.name} のcolorはすでに設定されています`
+        this._color = c
+    }
+
+    pushItem(item) {
+        this._items.push(item)
     }
 
     ok() {
@@ -19,6 +37,7 @@ export default class User {
     host(socket, room) {
         this.join(socket, room)
         this._host = room
+        this._isHost = true
         this._isOK = true
     }
 
