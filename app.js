@@ -82,7 +82,10 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.SEND_USER_ID, (userId) => {
-        assert(typeof(userId), 'string')
+        if(typeof(data.userId) == 'string') {
+            console.log(`userIdが存在しません`)
+            return
+        }
         if(!userId) {
             userId = uuidv4()
             socket.emit(conf.EMIT.GENERATE_USER_ID,  userId)
@@ -93,8 +96,14 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.LOGIN, (data) => {
-        assert(typeof(data.userId), 'string')
-        assert(typeof(data.name), 'string')
+        if(typeof(data.userId) == 'string') {
+            console.log(`userIdが存在しません`)
+            return
+        }
+        if(typeof(data.name) == 'string') {
+            console.log(`nameが存在しません`)
+            return
+        }
 
         const user_id = data.userId
         const name = data.name
@@ -111,9 +120,18 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.MAKE_ROOM, (data) => {
-        assert(typeof(data.password), 'string')
-        assert(typeof(data.num_members), 'string')
-        console.assert(data.userId in users, `USER ID: ${data.userId}はログインしておりません`)
+        if(typeof(data.password) == 'string') {
+            console.log(`userIdが存在しません`)
+            return
+        }
+        if(typeof(data.num_members) == 'int') {
+            console.log(`data.num_membersは${data.num_members}`)
+            return
+        }
+        if(typeof(data.userId) == 'string') {
+            console.log(`USER ID: ${data.userId}はログインしておりません`)
+            return
+        }
 
         const roomId = RoomIDGenerator.use()
         const name = roomId
@@ -129,11 +147,23 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.JOIN_ROOM, (data) => {
-        assert(typeof(data.roomId), 'string')
-        assert(typeof(data.userId), 'string')
-        assert(data.roomId in rooms, true)
-        console.assert(data.userId in users, `${data.userId} はログインしておりません`)
-
+        if(typeof(data.userId) == 'string') {
+            console.log(`userIdが存在しません`)
+            return
+        }
+        if(typeof(data.roomId) == 'string') {
+            console.log(`roomIdが存在しません`)
+            return
+        }
+        if(data.userId in users) {
+            console.log(`${data.userId}はログインしていません`)
+            return
+        }
+        if(data.roomId in rooms) {
+            console.log(`${data.roomId}は存在しないルームです`)
+            return
+        }
+        
         const room = rooms[data.roomId]
         const user = users[data.userId]
         if(room.isJoinable()) {
@@ -167,23 +197,41 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.LEAVE_ROOM, (data) => {
-        assert(typeof(data.userId), 'string')
-        assert(data.userId in users, true)
+        if(typeof(data.userId) == 'string') {
+            console.log(`userIdが存在しません`)
+            return
+        }
+        if(data.userId in users) {
+            console.log(`${data.userId}はログインしていません`)
+            return
+        }
 
         const user = users[data.userId]
         user.leave(socket, io)
     })
 
     socket.on(conf.ON.BREAK_ROOM, (data) => {
-        assert(typeof(data.userId), 'string')
-        assert(data.userId in users, true)
+        if(typeof(data.userId) == 'string') {
+            console.log(`userIdが存在しません`)
+            return
+        }
+        if(data.userId in users) {
+            console.log(`${data.userId}はログインしていません`)
+            return
+        }
 
         const user = users[data.userId]
     })
 
     socket.on(conf.ON.PLAYER_READY, (data) => {
-        assert(typeof(data.userId), 'string')
-        assert(data.userId in users, true)
+        if(typeof(data.userId) == 'string') {
+            console.log(`userIdが存在しません`)
+            return
+        }
+        if(data.userId in users) {
+            console.log(`${data.userId}はログインしていません`)
+            return
+        }
 
         const user = users[data.userId]
         const d = {}
@@ -201,17 +249,32 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.START_GAME, (data) => {
-        assert(typeof(data.userId), 'string')
-        assert(data.userId in users, true)
+        if(typeof(data.userId) == 'string') {
+            console.log(`userIdが存在しません`)
+            return
+        }
+        if(data.userId in users) {
+            console.log(`${data.userId}はログインしていません`)
+            return
+        }
 
         const user = users[data.userId]
         if(user.room) user.room.start(io)
     })
 
     socket.on(conf.ON.SEND_IMAGE, (data) => {
-        assert(typeof(data.buffer), 'string')
-        assert(typeof(data.userId), 'string')
-        assert(data.userId in users, true)
+        if(typeof(data.buffer) == 'string') {
+            console.log(`bufferが存在しません`)
+            return
+        }
+        if(typeof(data.userId) == 'string') {
+            console.log(`userIdが存在しません`)
+            return
+        }
+        if(data.userId in users) {
+            console.log(`${data.userId}はログインしていません`)
+            return
+        }
 
         const buffer = data.buffer
         const user = users[data.userId]
@@ -229,9 +292,18 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.REQUIRE_RESULT, (data) => {
-        console.assert(typeof(data.userId) == 'string', `userIdが存在しません`)
-        console.assert(data.userId in users, true)
-        console.assert(users[data.userId].room, `${users[data.userId].name} はRoomに所属していません`)
+        if(typeof(data.userId) == 'string') {
+            console.log(`userIdが存在しません`)
+            return
+        }
+        if(data.userId in users) {
+            console.log(`${data.userId}はログインしていません`)
+            return
+        }
+        if(users[data.userId].room) {
+            console.log(`${users[data.userId].name} はRoomに所属していません`)
+            return
+        }
 
         const user = users[data.userId]
         console.log(user.room.result)
@@ -239,8 +311,14 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.LOGOUT, (userId) => {
-        assert(typeof(userId), 'string')
-        assert(userId in users, true)
+        if(typeof(data.userId) == 'string') {
+            console.log(`userIdが存在しません`)
+            return
+        }
+        if(data.userId in users) {
+            console.log(`${data.userId}はログインしていません`)
+            return
+        }
 
         const user = users[userId]
         socket.broadcast.emit(conf.EMIT.SEND_MESSAGE, `${user.name} がログアウトしました`)
