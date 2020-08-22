@@ -23,7 +23,7 @@ const ifaces = os.networkInterfaces()
 const TEST_ICON = process.env["TEST_ICON"]
 
 const PORT = process.env.PORT || 3000
-const IP = ifaces['en0'][3].address
+// const IP = ifaces['en0'][3].address
 
 const _users = {}
 const _rooms = {}
@@ -253,5 +253,5 @@ io.on(conf.ON.CONNECTION, (socket) => {
 
 http.listen(PORT, () => {
     console.log(`Local:   http://localhost:${PORT}/`)
-    console.log(`Network: http://${IP}:${PORT}/`)
+    // console.log(`Network: http://${IP}:${PORT}/`)
 })
