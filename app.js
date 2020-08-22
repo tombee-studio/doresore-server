@@ -82,10 +82,6 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.SEND_USER_ID, (userId) => {
-        if(typeof(data.userId) == 'string') {
-            console.log(`userIdが存在しません`)
-            return
-        }
         if(!userId) {
             userId = uuidv4()
             socket.emit(conf.EMIT.GENERATE_USER_ID,  userId)
@@ -96,11 +92,11 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.LOGIN, (data) => {
-        if(typeof(data.userId) == 'string') {
+        if(typeof(data.userId) != 'string') {
             console.log(`userIdが存在しません`)
             return
         }
-        if(typeof(data.name) == 'string') {
+        if(typeof(data.name) != 'string') {
             console.log(`nameが存在しません`)
             return
         }
@@ -120,15 +116,15 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.MAKE_ROOM, (data) => {
-        if(typeof(data.password) == 'string') {
+        if(typeof(data.password) != 'string') {
             console.log(`userIdが存在しません`)
             return
         }
-        if(typeof(data.num_members) == 'int') {
-            console.log(`data.num_membersは${data.num_members}`)
+        if(typeof(data.num_members) != 'string') {
+            console.log(`data.num_membersは${typeof(data.num_members)}`)
             return
         }
-        if(typeof(data.userId) == 'string') {
+        if(typeof(data.userId) != 'string') {
             console.log(`USER ID: ${data.userId}はログインしておりません`)
             return
         }
@@ -147,19 +143,19 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.JOIN_ROOM, (data) => {
-        if(typeof(data.userId) == 'string') {
+        if(typeof(data.userId) != 'string') {
             console.log(`userIdが存在しません`)
             return
         }
-        if(typeof(data.roomId) == 'string') {
+        if(typeof(data.roomId) != 'string') {
             console.log(`roomIdが存在しません`)
             return
         }
-        if(data.userId in users) {
+        if(!data.userId in users) {
             console.log(`${data.userId}はログインしていません`)
             return
         }
-        if(data.roomId in rooms) {
+        if(!data.roomId in rooms) {
             console.log(`${data.roomId}は存在しないルームです`)
             return
         }
@@ -197,7 +193,7 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.LEAVE_ROOM, (data) => {
-        if(typeof(data.userId) == 'string') {
+        if(typeof(data.userId) != 'string') {
             console.log(`userIdが存在しません`)
             return
         }
@@ -211,11 +207,11 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.BREAK_ROOM, (data) => {
-        if(typeof(data.userId) == 'string') {
+        if(typeof(data.userId) != 'string') {
             console.log(`userIdが存在しません`)
             return
         }
-        if(data.userId in users) {
+        if(!data.userId in users) {
             console.log(`${data.userId}はログインしていません`)
             return
         }
@@ -224,11 +220,11 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.PLAYER_READY, (data) => {
-        if(typeof(data.userId) == 'string') {
+        if(typeof(data.userId) != 'string') {
             console.log(`userIdが存在しません`)
             return
         }
-        if(data.userId in users) {
+        if(!data.userId in users) {
             console.log(`${data.userId}はログインしていません`)
             return
         }
@@ -249,11 +245,11 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.START_GAME, (data) => {
-        if(typeof(data.userId) == 'string') {
+        if(typeof(data.userId) != 'string') {
             console.log(`userIdが存在しません`)
             return
         }
-        if(data.userId in users) {
+        if(!data.userId in users) {
             console.log(`${data.userId}はログインしていません`)
             return
         }
@@ -263,15 +259,15 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.SEND_IMAGE, (data) => {
-        if(typeof(data.buffer) == 'string') {
+        if(typeof(data.buffer) != 'string') {
             console.log(`bufferが存在しません`)
             return
         }
-        if(typeof(data.userId) == 'string') {
+        if(typeof(data.userId) != 'string') {
             console.log(`userIdが存在しません`)
             return
         }
-        if(data.userId in users) {
+        if(!data.userId in users) {
             console.log(`${data.userId}はログインしていません`)
             return
         }
@@ -292,15 +288,15 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.REQUIRE_RESULT, (data) => {
-        if(typeof(data.userId) == 'string') {
+        if(typeof(data.userId) != 'string') {
             console.log(`userIdが存在しません`)
             return
         }
-        if(data.userId in users) {
+        if(!data.userId in users) {
             console.log(`${data.userId}はログインしていません`)
             return
         }
-        if(users[data.userId].room) {
+        if(!users[data.userId].room) {
             console.log(`${users[data.userId].name} はRoomに所属していません`)
             return
         }
@@ -311,11 +307,11 @@ io.on(conf.ON.CONNECTION, (socket) => {
     })
 
     socket.on(conf.ON.LOGOUT, (userId) => {
-        if(typeof(data.userId) == 'string') {
+        if(typeof(data.userId) != 'string') {
             console.log(`userIdが存在しません`)
             return
         }
-        if(data.userId in users) {
+        if(!data.userId in users) {
             console.log(`${data.userId}はログインしていません`)
             return
         }
