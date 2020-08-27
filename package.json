@@ -33,6 +33,7 @@
     "googleapis": "^59.0.0",
     "http": "0.0.1-security",
     "jimp": "^0.16.0",
+    "lwl": "^0.2.0",
     "mocha": "^8.1.1",
     "rx-node": "^1.0.2",
     "sharp": "^0.25.4",

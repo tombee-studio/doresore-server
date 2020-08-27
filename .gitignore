@@ -6,3 +6,4 @@ test*
 .env
 env.sh
 keyFile.json
+ngrok

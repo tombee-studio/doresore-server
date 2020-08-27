@@ -14,11 +14,16 @@ export default class User {
     get items() { return this._items }
     get isHost() { return this._isHost }
     get color() {
-        if(this._color == null) throw `${this.name} が意図しないアクセスをしました`
+        if(!this._color) {
+            console.log(`${this.name} が意図しないアクセスをしました`)
+            return null
+        }
         return this._color
     }
     set color(c) {
-        if(this._color) throw `${this.name} のcolorはすでに設定されています`
+        if(this._color) {
+            console.log(`${this.name} のcolorはすでに設定されています`)
+        }
         this._color = c
     }
 

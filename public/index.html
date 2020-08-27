@@ -23,7 +23,8 @@
             userId: sessionStorage.getItem('user id'),
             name: $('#room_name').val(),
             password: $('#room_password').val(),
-            num_members: $('#num-members').val()
+            num_members: Number($('#num-members').val()),
+            isCertified: true
           });
           $('#room_name').val('');
           $('#room_password').val('');
@@ -81,8 +82,18 @@
           return false;
         });
 
+        $('#frm_del_room').submit(function() {
+          data = {
+            roomId: $('#room-id').val(),
+          }
+          socket.emit('delete room', data);
+          return false;
+        });
+
         $('#form_logout').submit(function() {
-            socket.emit('logout', sessionStorage.getItem('user id'));
+            socket.emit('logout', {
+              userId: $('#logout-id').val()
+            });
             return false;
         });
 
@@ -90,14 +101,22 @@
             $('#messages').append($('<li>').text(message));
         });
 
-        socket.on('update login users', function(num_login_users) {
-            $('#num_login_user').text(`${num_login_users}人がログインしています`)
+        socket.on('update login users', function(users) {
+          $('#login_user').text(users.map(user => user.id))
         })
 
         socket.on('update rooms', function(rooms) {
             console.log(rooms);
-            ids = rooms.map(item => item.room_id);
+            ids = rooms.map(item => item.name);
             $('#num_rooms').text(`ルームが${ids}`)
+        })
+
+        socket.on('item_receive', function(data) {
+            console.log(data);
+        })
+
+        socket.on('other_correct_receive', function(data) {
+            console.log(data);
         })
 
         socket.on('check user id', function(data) {
@@ -110,14 +129,16 @@
         })
 
         socket.on('join new', function(data) {
-          console.log(data)
           const members = data.members.map((user) => user.name)
           $('#messages').append($('<li>').text(`${data.room} に ${members} が参加しています`));
         })
 
         socket.on('join room', function(data) {
-          console.log(data)
           $('#messages').append($('<li>').text(`${data.room}号室に${data.number} 人が参加しています`));
+        })
+
+        socket.on('test', function(data) {
+          $('#messages').append($('<li>').text(data));
         })
 
         socket.on('you are host', function(room) {
@@ -125,10 +146,9 @@
         })
 
         socket.on('return_name', function(data) {
-          console.log(data)
           $('#rooms').text();
           for(var d of data) {
-            $('#rooms').append($('<li>').text(`${d.name}: ${d.roomId}`))
+            $('#rooms').append($('<li>').text(`${d.name}`))
           }
         })
 
@@ -145,6 +165,10 @@
           $('#labels').text(labels.map((item) => item.name));
         })
 
+        socket.on('is ok', function(data) {
+          console.log(data)
+        })
+
         socket.on('runtime error', function(info) {
           console.log(info);
         })
@@ -155,11 +179,11 @@
   <h1>チャットアプリをつくってみよう</h1>
   <ul id='user_id'></ul>
   <h3 id='count-down'></h3>
-  <h6 id='num_login_user'></h6>
   <h6 id='num_rooms'></h6>
   <h6 id='labels'></h6>
   <ul id="rooms"></ul>
   <ul id="messages"></ul>
+  <ul id='login_user'></ul>
   <form id="register_user" action="">
     <input id="user_name" autocomplete="off">
     <button id="btn_register_user">ユーザー登録</button>
@@ -191,7 +215,12 @@
     <button id="btn_start_game">ゲームスタート</button>
   </form>
   <form id="form_logout" action="">
+    <input id="logout-id" autocomplete="off">
     <button id="btn_logout">ログアウト</button>
+  </form>
+  <form id="frm_del_room" action="">
+    <input id="room-id" autocomplete="off">
+    <button id="btn_del_room">部屋削除</button>
   </form>
 </body>
 </html>

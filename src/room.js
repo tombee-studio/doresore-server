@@ -1,19 +1,18 @@
 import { Observable } from 'rx'
 import { setImmediate } from 'timers'
-import Jimp from 'jimp'
 import Dataset from '../dataset.json'
-import fs from 'fs'
-import sharp from 'sharp'
 import conf from 'config'
 import Util from './util'
+import lwl from 'lwl'
 
 export default class Room {
-    constructor(io, room_id, name, password, numMembers, icon) {
+    constructor(io, room_id, name, password, numMembers, icon, isCertified) {
         this.state = Room.GameState.GAME_OVER
         this.room_id = room_id
         this.name = name
         this.password = password
         this.numMembers = numMembers
+        this.isCertified = isCertified
         this.icon = icon
         this.limitTime = Number(process.env.LIMIT_TIME)
         this.labels = this.random(Dataset, 10).map((item) => {
@@ -23,15 +22,20 @@ export default class Room {
             return item
         })
         this._host = null
-        this._usedColor = Util.shuffle(['red', 'blue', 'yellow'])
+        this._usedColor = ['yellow','blue','red']
         this.members = new Proxy([], {
             set: (target, property, val, receiver) => {
                 Reflect.set(target, property, val, receiver)
                 if(io && property != 'length') {
                     setTimeout(() => {
+                        console.log(`**EMIT** ${conf.EMIT.SEND_ROOM_DATA}`)
                         io.sockets.in(this.room_id)
                             .emit(conf.EMIT.SEND_ROOM_DATA, this.getJoinRoomData())
-                    }, 1000)
+                        if(val._isHost) {
+                            io.sockets.in(this.room_id)
+                                .emit('is ok', this.ready)
+                        }
+                    }, 5000)
                 }
                 return true
             },
@@ -39,9 +43,10 @@ export default class Room {
                 Reflect.deleteProperty(target, property)
                 if(io && property != 'length') {
                     setTimeout(() => {
+                        console.log(`**EMIT** ${conf.EMIT.SEND_ROOM_DATA}`)
                         io.sockets.in(this.room_id)
                             .emit(conf.EMIT.SEND_ROOM_DATA, this.getJoinRoomData())
-                    }, 1000)
+                    }, 5000)
                 }
                 return true
             }
@@ -49,20 +54,40 @@ export default class Room {
     }
 
     get result() {
-        const members = this.members.slice(0, this.members.length)
-        members.sort((user1, user2) => user1.items.length - user2.items.length)
+        const ranks = []
         const rankings = {}
-        members.forEach(user => {
-            rankings[user.user_id] = 1
+        const members = this.members.slice(0, this.members.length)
+        members.sort((user1, user2) => user2.items.length - user1.items.length)
+        members.forEach((user, index) => {
+            ranks[index] = rankings[user.user_id] = 1 + 
+                (members[index - 1] && members[index - 1].items.length != members[index].items.length 
+                    && ranks[index - 1]? ranks[index - 1]: 0)
+        })
+
+        const buffers = this.members.map(user => user.items.map(
+            item => item.buffer.replace('data:image/jpeg;base64,', '')))
+        buffers.forEach(buffer => {
+            while(buffer.length < 3) buffer.push('')
         })
 
         return {
-            'base64ImageRepresentation': this.members.map(user => user.items.map(
-                item => item.buffer).join(',')),
+            'base64ImageRepresentation': buffers.map(buffer => buffer.join(',')).join(','),
             'result_state': this.state,
             'icon_str': this.members.map(user => user.icon).join(','),
             'ranks': this.members.map(user => rankings[user.user_id]).join(',')
         }
+    }
+
+    get ready() {
+        const d = {}
+        const okData = this.members.map(user => {
+            return { 'is_ok': user.isOK() }
+        })
+        d['number'] = okData.length
+        d['num_members'] = this.numMembers
+        okData.forEach((element, index) => { d[index] = element });
+        d['is_all_ok'] = Object.values(okData).every(item => item['is_ok'])
+        return d
     }
 
     random(array, num) {
@@ -122,38 +147,42 @@ export default class Room {
     }
 
     start(io) {
-        const names = this.labels.map((item) => item.name).join(',')
-        const icons = this.labels.map((item) => item.icon).join(',')
-        console.log(names)
-        io.sockets.in(this.room_id).emit(conf.EMIT.SEND_ITEMS, {
-            'player_icon_names': names,
-            'seikai_item_data': icons
-        })
-        io.sockets.in(this.room_id).emit(conf.EMIT.SEND_MESSAGE, 'GAME START')
-        io.sockets.in(this.room_id).emit(conf.EMIT.SEND_COUNT, {
-            'times': String(this.limitTime)
-        })
-        this.subscriber = Observable.interval(1000)
-            .timeInterval()
-            .take(this.limitTime).subscribe((x) => {
-                io.sockets.in(this.room_id).emit(conf.EMIT.SEND_COUNT, {
-                    'times': String(this.limitTime - x.value - 1)
-                })
-            }, (err) => {
-                console.log(err)
-            }, () => {
-                setImmediate(() => {
-                    io.sockets.in(this.room_id).emit(conf.EMIT.TIME_OVER)
-                    this.state = Room.GameState.TIME_OVER
-                }, 1000)
+        io.sockets.in(this.room_id).emit('game start')
+        setTimeout(() => {
+            const names = this.labels.map((item) => item.name).join(',')
+            const icons = this.labels.map((item) => item.icon).join(',')
+            console.log(names)
+            io.sockets.in(this.room_id).emit(conf.EMIT.SEND_ITEMS, {
+                'player_icon_names': names,
+                'seikai_item_data': icons
             })
+            io.emit(conf.EMIT.SEND_MESSAGE, 'GAME START')
+            io.sockets.in(this.room_id).emit(conf.EMIT.SEND_COUNT, {
+                'times': String(this.limitTime)
+            })
+            console.log(this)
+            this.subscriber = Observable.interval(1000)
+                .timeInterval()
+                .take(this.limitTime).subscribe((x) => {
+                    io.sockets.in(this.room_id).emit(conf.EMIT.SEND_COUNT, {
+                        'times': String(this.limitTime - x.value - 1)
+                    })
+                }, (err) => {
+                    console.log(err)
+                }, () => {
+                    setImmediate(() => {
+                        this.state = Room.GameState.TIME_OVER
+                        io.sockets.in(this.room_id).emit(conf.EMIT.TIME_OVER)
+                    }, 1000)
+                })
+        }, 5000)
     }
 
     judge(socket, io, buffer, value, user) {
         const ARRAY = this.labels
             .filter(item => !item.isOccupied)
             .map(item => item.name)
-        const array = value.filter(item => {
+        const array = new Set(value.filter(item => {
             return ARRAY.includes(item.name.toLowerCase())
         }).filter(item => {
             return item.score > 0.5
@@ -162,42 +191,44 @@ export default class Room {
             const deltax = bouding[1].x - bouding[0].x
             const deltay = bouding[2].y - bouding[1].y
             return deltax > 0.3 || deltay > 0.3
-        })
+        }).map(item => item.name.toLowerCase()))
 
+        const a = [...array]
         console.log(ARRAY)
-        console.log(array)
+        console.log(a)
 
-        if(array.length > 0) {
-            array.forEach(elem => {
-                this.labels.filter(item => item.name == elem.name.toLowerCase())
-                    .forEach(elem => {
-                        elem.isOccupied = true
-                        elem.userId = user.user_id
-                        elem.buffer = buffer
-                        user.pushItem(elem)
+        if(a.length > 0) {
+            a.forEach(elem => {
+                this.labels.filter(item => item.name == elem)
+                    .forEach(i => {
+                        i.isOccupied = true
+                        i.userId = user.user_id
+                        i.buffer = buffer
+                        user.pushItem(i)
                     })
-                io.in(this.room_id).emit(conf.EMIT.OTHER_SUCCEED, {
-                    'object_name': elem.name,
+                socket.broadcast.to(this.room_id).emit(conf.EMIT.OTHER_SUCCEED, {
+                    'object_name': elem,
                     'other_name': user.name,
                     'color_name': user.color
                 })
                 socket.emit(conf.EMIT.CORRECT, {
                     'player_name': user.name,
-                    'obj_name': elem.name,
+                    'object_name': elem,
                     'color_name': user.color
                 })
             })
-            if(user.items.length > conf.CLEAR_ITEM_NUMBER) this.clear()
+            console.log(`CLEAR ${user.items.length}`)
+            if(user.items.length >= conf.CLEAR_ITEM_NUMBER) {
+                this.clear(socket, io)
+            }
         } else {
             socket.emit(conf.EMIT.WRONG)
         }
     }
 
-    clear() {
-        if(this.subscriber) this.subscriber.unsubscribe()
+    clear(socket, io) {
         this.state = Room.GameState.GAME_OVER
-        socket.emit('you win')
-        socket.broadcast.in(this.room_id).emit('you fail')
+        io.sockets.in(this.room_id).emit(conf.EMIT.GAME_OVER)
     }
 
     leave(user, socket, io) {
