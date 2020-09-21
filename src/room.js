@@ -15,7 +15,18 @@ export default class Room {
         this.isCertified = isCertified
         this.icon = icon
         this.limitTime = Number(process.env.LIMIT_TIME)
-        this.labels = this.random(Dataset, 10).map((item) => {
+        this.labels = Dataset.filter(item => {
+            return ['book', 
+                    'scissors', 
+                    'spoon', 
+                    'kettle', 
+                    'scooter',
+                    'cherry',
+                    'torii',
+                    'car',
+                    'glasses',
+                    'fork'].includes(item.name)
+        }).map(item => {
             item.buffer = process.env["TEST_ICON"]
             item.isOccupied = false
             item.userId = null
@@ -27,26 +38,26 @@ export default class Room {
             set: (target, property, val, receiver) => {
                 Reflect.set(target, property, val, receiver)
                 if(io && property != 'length') {
-                    setTimeout(() => {
-                        console.log(`**EMIT** ${conf.EMIT.SEND_ROOM_DATA}`)
+                    console.log(`**EMIT** ${conf.EMIT.SEND_ROOM_DATA}`)
+                    io.sockets.in(this.room_id)
+                        .emit(conf.EMIT.SEND_ROOM_DATA, this.getJoinRoomData())
+                    if(val._isHost) {
                         io.sockets.in(this.room_id)
-                            .emit(conf.EMIT.SEND_ROOM_DATA, this.getJoinRoomData())
-                        if(val._isHost) {
-                            io.sockets.in(this.room_id)
-                                .emit('is ok', this.ready)
-                        }
-                    }, 5000)
+                            .emit('is ok', this.ready)
+                    }
                 }
                 return true
             },
             deleteProperty: (target, property) => {
                 Reflect.deleteProperty(target, property)
                 if(io && property != 'length') {
-                    setTimeout(() => {
-                        console.log(`**EMIT** ${conf.EMIT.SEND_ROOM_DATA}`)
+                    console.log(`**EMIT** ${conf.EMIT.SEND_ROOM_DATA}`)
+                    io.sockets.in(this.room_id)
+                        .emit(conf.EMIT.SEND_ROOM_DATA, this.getJoinRoomData())
+                    if(val._isHost) {
                         io.sockets.in(this.room_id)
-                            .emit(conf.EMIT.SEND_ROOM_DATA, this.getJoinRoomData())
-                    }, 5000)
+                            .emit('is ok', this.ready)
+                    }
                 }
                 return true
             }
@@ -160,7 +171,6 @@ export default class Room {
             io.sockets.in(this.room_id).emit(conf.EMIT.SEND_COUNT, {
                 'times': String(this.limitTime)
             })
-            console.log(this)
             this.subscriber = Observable.interval(1000)
                 .timeInterval()
                 .take(this.limitTime).subscribe((x) => {
@@ -175,7 +185,7 @@ export default class Room {
                         io.sockets.in(this.room_id).emit(conf.EMIT.TIME_OVER)
                     }, 1000)
                 })
-        }, 5000)
+        }, 3000)
     }
 
     judge(socket, io, buffer, value, user) {

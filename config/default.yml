@@ -1,4 +1,4 @@
-CLEAR_ITEM_NUMBER: 2
+CLEAR_ITEM_NUMBER: 3
 EMIT:
   CHECK_USER_ID: 'check user id'
   UPDATE_LOGIN_USERS: 'update login users'

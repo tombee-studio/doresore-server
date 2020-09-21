@@ -9,10 +9,12 @@ export default class User {
         this._isOK = false
         this._color = null
         this._items = []
+        this._isGotResult = false
     }
 
     get items() { return this._items }
     get isHost() { return this._isHost }
+    get isGotResult() { return this._isGotResult }
     get color() {
         if(!this._color) {
             console.log(`${this.name} が意図しないアクセスをしました`)
@@ -25,6 +27,10 @@ export default class User {
             console.log(`${this.name} のcolorはすでに設定されています`)
         }
         this._color = c
+    }
+
+    gotResult() {
+        this._isGotResult = true
     }
 
     pushItem(item) {

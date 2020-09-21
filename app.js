@@ -11,9 +11,7 @@ import sharp from 'sharp'
 import { Server } from 'http'
 import { v4 as uuidv4 } from 'uuid'
 import RoomIDGenerator from './src/room-id-generator'
-import assert from 'assert'
 import conf from 'config'
-import lwl from 'lwl/lib/lwl'
 
 RoomIDGenerator.generate('0123456789', 4)
 
@@ -25,54 +23,8 @@ const TEST_ICON = process.env["TEST_ICON"]
 
 const PORT = process.env.PORT || 3000
 
-const _users = {}
-const _rooms = {}
-
-const users = new Proxy(_users, {
-    set: (target, name, value) => {
-        Reflect.set(target, name, value)
-        io.emit(conf.EMIT.UPDATE_LOGIN_USERS, Object.values(users).map(user => {
-            return {
-                'id': user.user_id,
-                'name': user.name
-            }
-        }))
-        return true
-    },
-    deleteProperty: function(target, prop) {
-        Reflect.deleteProperty(target, prop)
-        io.emit(conf.EMIT.UPDATE_LOGIN_USERS, Object.values(users).map(user => {
-            return {
-                'id': user.user_id,
-                'name': user.name
-            }
-        }))
-        return true
-    }
-})
-
-const rooms = new Proxy(_rooms, {
-    set: (target, name, value) => {
-        Reflect.set(target, name, value)
-        io.emit(conf.EMIT.UPDATE_ROOMS, Object.values(rooms).map((item) => {
-            return {
-                room_id: item.roomId,
-                name: item.name
-            }
-        }))
-        return true
-    },
-    deleteProperty: function(target, prop) {
-        Reflect.deleteProperty(target, prop)
-        io.emit(conf.EMIT.UPDATE_ROOMS, Object.values(rooms).map((item) => {
-            return {
-                room_id: item.roomId,
-                name: item.name
-            }
-        }))
-        return true
-    }
-})
+const users = {}
+const rooms = {}
 
 const u = users['testuser'] = new User('testuser', 'taro', TEST_ICON)
 const r = rooms['0000'] = new Room(io, '0000', '0000', '0000', 100, TEST_ICON)
@@ -84,11 +36,14 @@ app.get('/' , (req, res) => {
 })
 
 io.on(conf.ON.CONNECTION, (socket) => {
-    lwl.notice(`${socket.id} connected`)
+    console.log(`**ON** ${socket.id} CONNECTED`)
     socket.emit(conf.EMIT.CHECK_USER_ID)
 
-    socket.on(conf.ON.TEST, (data) => {
-        lwl.notice(`**ON** ${conf.ON.TEST}`)
+    socket.on(conf.ON.TEST, (data, ack) => {
+        console.log(`**ON** ${conf.ON.TEST}`)
+        if(ack) ack({
+            'message': 'This is a pen.'
+        })
         io.emit(conf.EMIT.SEND_MESSAGE, data)
     })
 
@@ -123,15 +78,13 @@ io.on(conf.ON.CONNECTION, (socket) => {
                 'code': 20,
                 'message': 'ユーザIDはすでにログインしています'
             })
-        } else {
-            users[user_id] = new User(user_id, name, icon)
-            socket.broadcast.emit(conf.EMIT.SEND_MESSAGE, `${name} が参加しました`)
-        }
+            return;
+        } 
+        users[user_id] = new User(user_id, name, icon)
     })
 
     socket.on(conf.ON.MAKE_ROOM, (data) => {
         console.log(`**ON** ${conf.ON.MAKE_ROOM}`)
-        console.log(data)
         if(typeof(data.password) != 'string') {
             console.log(`userIdが存在しません`)
             return
@@ -153,13 +106,15 @@ io.on(conf.ON.CONNECTION, (socket) => {
             return
         }
 
+        const user = users[data.userId]
+        if(user.room) return
+
         const roomId = RoomIDGenerator.use()
         const name = roomId
         const password = data.password
         const numMembers = data.num_members
         const isCertified = data.isCertified
         const room = new Room(io, roomId, name, password, numMembers, TEST_ICON, isCertified)
-        const user = users[data.userId]
         io.emit(conf.EMIT.SEND_MESSAGE, `${roomId}が${user.name}によって作られました`)
         socket.join(roomId)
         rooms[roomId] = room
@@ -169,7 +124,6 @@ io.on(conf.ON.CONNECTION, (socket) => {
 
     socket.on(conf.ON.JOIN_ROOM, (data) => {
         console.log(`**ON** ${conf.ON.JOIN_ROOM}`)
-        console.log(data)
         if(!data.userId) {
             console.log(`userIdが存在しません`)
             return
@@ -268,7 +222,7 @@ io.on(conf.ON.CONNECTION, (socket) => {
                 'owner_name': room._host.name,
                 'people': `${room.members.length}/${room.numMembers}`,
                 'pass': room.password,
-                'image': room.icon,
+                'image': 'data:image/jpeg;base64,' + room.icon,
                 'room_id': room.name
             } 
         })
@@ -395,7 +349,7 @@ io.on(conf.ON.CONNECTION, (socket) => {
         }
     })
 
-    socket.on(conf.ON.REQUIRE_RESULT, (data) => {
+    socket.on(conf.ON.REQUIRE_RESULT, (data, ack) => {
         console.log(`**ON** ${conf.ON.REQUIRE_RESULT}`)
         if(typeof(data.userId) != 'string') {
             console.log(`userIdが存在しません`)
@@ -405,16 +359,27 @@ io.on(conf.ON.CONNECTION, (socket) => {
             console.log(`${data.userId}はログインしていません`)
             return
         }
+        if(!users[data.userId]) {
+            console.log(`${data.userId}の実態がありません`)
+            return
+        }
         if(!users[data.userId].room) {
             console.log(`${users[data.userId].name} はRoomに所属していません`)
             return
         }
 
         const user = users[data.userId]
-        console.log(user.room.result['base64ImageRepresentation'][0].slice(0, 10))
-        socket.emit(conf.EMIT.SEND_RESULT, user.room.result)
-        user.logout(socket, io)
-        delete users[data.userId]
+        socket.emit(conf.EMIT.SEND_RESULT, user.room.result, () => {
+            console.log(`l.415 ACK: ${conf.EMIT.SEND_RESULT}`)
+            user.gotResult()
+            if(user.room.members.every(user => user.isGotResult)) {
+                user.room.members.forEach(u => {
+                    u.logout(socket, io)
+                    delete users[u.user_id]
+                })
+                delete rooms[user.room.room_id]
+            }
+        })
     })
 
     socket.on(conf.ON.LOGOUT, (data) => {
@@ -435,6 +400,10 @@ io.on(conf.ON.CONNECTION, (socket) => {
             users[userId].logout(socket, io)
             delete users[userId]
         }
+    })
+
+    socket.on('disconnect', (data) => {
+        console.log(`**ON** ${socket.id} DISCONNECTED`)
     })
 })
 
