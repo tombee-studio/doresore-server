@@ -1,3 +1,4 @@
+import 'babel-polyfill'
 import { config } from 'dotenv'
 config()
 
@@ -7,7 +8,6 @@ import Vision from './src/vision'
 import os from 'os'
 import express from 'express'
 import SocketIO from 'socket.io'
-import sharp from 'sharp'
 import { Server } from 'http'
 import { v4 as uuidv4 } from 'uuid'
 import RoomIDGenerator from './src/room-id-generator'

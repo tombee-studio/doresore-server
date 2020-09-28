@@ -1,0 +1,40 @@
+{
+  "CLEAR_ITEM_NUMBER": 3,
+  "EMIT": {
+    "CHECK_USER_ID": "check user id",
+    "UPDATE_LOGIN_USERS": "update login users",
+    "UPDATE_ROOMS": "update rooms",
+    "SEND_MESSAGE": "send message",
+    "GENERATE_USER_ID": "generate user id",
+    "RUNTIME_ERROR": "runtime error",
+    "RETURN_ROOM_DATA": "return_room",
+    "SEND_ROOM_DATA": "join room",
+    "SEND_ITEMS": "item_receive",
+    "SEND_COUNT": "time_receive",
+    "TIME_OVER": "time over",
+    "GAME_OVER": "game over",
+    "OTHER_SUCCEED": "other_correct_receive",
+    "CORRECT": "you_correct_receive",
+    "WRONG": "you_false_receive",
+    "SEND_RESULT": "result_receive",
+    "FAIL_JOIN": "join fail"
+  },
+  "ON": {
+    "CONNECTION": "connection",
+    "TEST": "test",
+    "SEND_USER_ID": "send user id",
+    "LOGIN": "login",
+    "MAKE_ROOM": "make room",
+    "JOIN_ROOM": "enter_room",
+    "JOIN_DIRECT": "direct in",
+    "GET_ROOM_DATA": "search_room",
+    "LEAVE_ROOM": "leave room",
+    "BREAK_ROOM": "break room",
+    "PLAYER_READY": "change ok",
+    "START_GAME": "game start",
+    "SEND_IMAGE": "img_send",
+    "REQUIRE_RESULT": "result_send",
+    "DELETE_ROOM": "delete room",
+    "LOGOUT": "logout"
+  }
+}

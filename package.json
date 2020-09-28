@@ -5,10 +5,11 @@
   "main": "app.js",
   "scripts": {
     "local": "babel-node . LOCAL",
-    "start": "babel-node app.js",
-    "test": "babel-node test.js"
+    "start": "node build/compiled.js",
+    "test": "babel-node test.js",
+    "build": "npx webpack"
   },
-  "author": "",
+  "author": "tomoya-kwansei",
   "license": "ISC",
   "devDependencies": {
     "@babel/cli": "^7.10.5",
@@ -16,10 +17,12 @@
     "@babel/node": "^7.10.5",
     "@babel/preset-env": "^7.11.0",
     "babel-loader": "^8.1.0",
+    "babel-polyfill": "^6.26.0",
     "config": "^3.3.1",
+    "dotenv-webpack": "^3.0.0",
     "json-loader": "^0.5.7",
     "watch": "^1.0.2",
-    "webpack": "^4.44.1",
+    "webpack": "^4.44.2",
     "webpack-cli": "^3.3.12"
   },
   "dependencies": {
@@ -33,10 +36,10 @@
     "googleapis": "^59.0.0",
     "http": "0.0.1-security",
     "jimp": "^0.16.0",
+    "js-yaml": "^3.14.0",
     "lwl": "^0.2.0",
     "mocha": "^8.1.1",
     "rx-node": "^1.0.2",
-    "sharp": "^0.25.4",
     "socket.io": "^2.3.0",
     "uuid": "^8.3.0"
   }
