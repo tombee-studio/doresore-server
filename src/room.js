@@ -35,33 +35,6 @@ export default class Room {
         this._host = null
         this._usedColor = ['yellow','blue','red']
         this.members = [] 
-        // new Proxy(, {
-        //     set: (target, property, val, receiver) => {
-        //         Reflect.set(target, property, val, receiver)
-        //         if(io && property != 'length') {
-        //             console.log(`**EMIT** ${conf.EMIT.SEND_ROOM_DATA}`)
-        
-        //             if(val._isHost) {
-        //                 io.sockets.in(this.room_id)
-        //                     .emit('is ok', this.ready)
-        //             }
-        //         }
-        //         return true
-        //     },
-        //     deleteProperty: (target, property) => {
-        //         Reflect.deleteProperty(target, property)
-        //         if(io && property != 'length') {
-        //             console.log(`**EMIT** ${conf.EMIT.SEND_ROOM_DATA}`)
-        //             io.sockets.in(this.room_id)
-        //                 .emit(conf.EMIT.SEND_ROOM_DATA, this.getJoinRoomData())
-        //             if(val._isHost) {
-        //                 io.sockets.in(this.room_id)
-        //                     .emit('is ok', this.ready)
-        //             }
-        //         }
-        //         return true
-        //     }
-        // })
     }
 
     get result() {
