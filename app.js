@@ -78,6 +78,7 @@ io.on(conf.ON.CONNECTION, (socket) => {
             return;
         } 
         users[user_id] = new User(user_id, twitterId, name, icon)
+        users[user_id].init()
     })
 
     socket.on(conf.ON.MAKE_ROOM, (data) => {
@@ -366,36 +367,14 @@ io.on(conf.ON.CONNECTION, (socket) => {
         }
 
         const user = users[socket.id]
-        socket.emit(conf.EMIT.SEND_RESULT, user.room.result, () => {
-            console.log(`l.415 ACK: ${conf.EMIT.SEND_RESULT}`)
-            user.gotResult()
-            if(user.room.members.every(user => user.isGotResult)) {
-                user.room.members.forEach(u => {
-                    u.logout(socket, io)
-                    delete users[u.user_id]
-                })
-                delete rooms[user.room.room_id]
-            }
-        })
-    })
-
-    socket.on(conf.ON.LOGOUT, (data) => {
-        console.log(`**ON** ${conf.ON.LOGOUT}`)
-        if(!socket.id) {
-            console.log(`userIdが存在しません`)
-            return
-        }
-        if(!socket.id in users) {
-            console.log(`${socket.id}はログインしていません`)
-            return
-        }
-
-        const userId = socket.id
-        const user = users[userId]
-        socket.broadcast.emit(conf.EMIT.SEND_MESSAGE, `${user.name} がログアウトしました`)
-        if(userId in users) {
-            users[userId].logout(socket, io)
-            delete users[userId]
+        user.gotResult()
+        socket.emit(conf.EMIT.SEND_RESULT, user.room.result)
+        if(user.room.members.every(user => user.isGotResult)) {
+            const room_id = user.room.room_id
+            user.room.members.forEach(u => {
+                u.init()
+            })
+            delete rooms[room_id]
         }
     })
 

@@ -4,13 +4,6 @@ export default class User {
         this.name = name
         this.twitterId = twitterId
         this.icon = icon
-        this.room = null
-        this._host = null
-        this._isHost = false
-        this._isOK = false
-        this._color = null
-        this._items = []
-        this._isGotResult = false
     }
 
     get items() { return this._items }
@@ -28,6 +21,16 @@ export default class User {
             console.log(`${this.name} のcolorはすでに設定されています`)
         }
         this._color = c
+    }
+
+    init() {
+        this.room = null
+        this._host = null
+        this._isHost = false
+        this._isOK = false
+        this._color = null
+        this._items = []
+        this._isGotResult = false
     }
 
     gotResult() {
