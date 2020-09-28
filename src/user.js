@@ -1,7 +1,8 @@
 export default class User {
-    constructor(user_id, name, icon) {
+    constructor(user_id, twitterId, name, icon) {
         this.user_id = user_id
         this.name = name
+        this.twitterId = twitterId
         this.icon = icon
         this.room = null
         this._host = null

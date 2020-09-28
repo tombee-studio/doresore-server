@@ -61,16 +61,13 @@ io.on(conf.ON.CONNECTION, (socket) => {
 
     socket.on(conf.ON.LOGIN, (data) => {
         console.log(`**ON** ${conf.ON.LOGIN}`)
-        if(typeof(data.userId) != 'string') {
-            console.log(`userIdが存在しません`)
-            return
-        }
         if(typeof(data.name) != 'string') {
             console.log(`nameが存在しません`)
             return
         }
 
-        const user_id = data.userId
+        const twitterId = data.userId
+        const user_id = socket.id
         const name = data.name
         const icon = 'data:image/jpeg;base64,' + (data.icon || TEST_ICON)
         if(user_id in users) {
@@ -80,7 +77,7 @@ io.on(conf.ON.CONNECTION, (socket) => {
             })
             return;
         } 
-        users[user_id] = new User(user_id, name, icon)
+        users[user_id] = new User(user_id, twitterId, name, icon)
     })
 
     socket.on(conf.ON.MAKE_ROOM, (data) => {
@@ -93,12 +90,12 @@ io.on(conf.ON.CONNECTION, (socket) => {
             console.log(`data.num_membersは${typeof(data.num_members)}`)
             return
         }
-        if(typeof(data.userId) != 'string') {
-            console.log(`USER ID: ${data.userId}は存在しておりません`)
+        if(typeof(socket.id) != 'string') {
+            console.log(`USER ID: ${socket.id}は存在しておりません`)
             return
         }
-        if(!data.userId in users) {
-            console.log(`USER ID: ${data.userId}はログインしておりません`)
+        if(!socket.id in users) {
+            console.log(`USER ID: ${socket.id}はログインしておりません`)
             return
         }
         if(typeof(data.isCertified) != 'boolean') {
@@ -106,7 +103,7 @@ io.on(conf.ON.CONNECTION, (socket) => {
             return
         }
 
-        const user = users[data.userId]
+        const user = users[socket.id]
         if(user.room) return
 
         const roomId = RoomIDGenerator.use()
@@ -124,7 +121,7 @@ io.on(conf.ON.CONNECTION, (socket) => {
 
     socket.on(conf.ON.JOIN_ROOM, (data) => {
         console.log(`**ON** ${conf.ON.JOIN_ROOM}`)
-        if(!data.userId) {
+        if(!socket.id) {
             console.log(`userIdが存在しません`)
             return
         }
@@ -132,8 +129,8 @@ io.on(conf.ON.CONNECTION, (socket) => {
             console.log(`roomIdが存在しません`)
             return
         }
-        if(!data.userId in users) {
-            console.log(`${data.userId}はログインしていません`)
+        if(!socket.id in users) {
+            console.log(`${socket.id}はログインしていません`)
             return
         }
         if(!data.roomId in rooms) {
@@ -141,7 +138,7 @@ io.on(conf.ON.CONNECTION, (socket) => {
             return
         }
 
-        const user = users[data.userId]
+        const user = users[socket.id]
         const room = rooms[data.roomId]
         if(!room.isJoinable()) {
             socket.emit(conf.EMIT.RUNTIME_ERROR, {
@@ -159,7 +156,7 @@ io.on(conf.ON.CONNECTION, (socket) => {
 
     socket.on(conf.ON.JOIN_DIRECT, (data) => {
         console.log(`**ON** ${conf.ON.JOIN_DIRECT}`)
-        if(typeof(data.userId) != 'string') {
+        if(typeof(socket.id) != 'string') {
             console.log(`userIdが存在しません`)
             return
         }
@@ -171,8 +168,8 @@ io.on(conf.ON.CONNECTION, (socket) => {
             console.log(`passが存在しません`)
             return
         }
-        if(!data.userId in users) {
-            console.log(`${data.userId}はログインしていません`)
+        if(!socket.id in users) {
+            console.log(`${socket.id}はログインしていません`)
             return
         }
         if(!data.roomId in rooms) {
@@ -181,7 +178,7 @@ io.on(conf.ON.CONNECTION, (socket) => {
         }
         
         const room = rooms[data.roomId]
-        const user = users[data.userId]
+        const user = users[socket.id]
         if(room.isJoinable()) {
             if(room.isCertified) {
                 if(data.pass != room.password) {
@@ -239,16 +236,16 @@ io.on(conf.ON.CONNECTION, (socket) => {
             console.log(`dataがundefinedです`)
             return
         }
-        if(typeof(data.userId) != 'string') {
+        if(typeof(socket.id) != 'string') {
             console.log(`userIdが存在しません`)
             return
         }
-        if(data.userId in users) {
-            console.log(`${data.userId}はログインしていません`)
+        if(socket.id in users) {
+            console.log(`${socket.id}はログインしていません`)
             return
         }
 
-        const user = users[data.userId]
+        const user = users[socket.id]
         user.leave(socket, io)
     })
 
@@ -258,22 +255,22 @@ io.on(conf.ON.CONNECTION, (socket) => {
             console.log(`dataが存在しません`)
             return
         }
-        if(typeof(data.userId) != 'string') {
+        if(typeof(socket.id) != 'string') {
             console.log(`userIdが存在しません`)
             return
         }
-        if(!data.userId in users) {
-            console.log(`${data.userId}はログインしていません`)
+        if(!socket.id in users) {
+            console.log(`${socket.id}はログインしていません`)
             return
         }
-        const user = users[data.userId]
+        const user = users[socket.id]
         if(!user.room) {
-            console.log(`${data.userId}はルームに所属していません`)
+            console.log(`${socket.id}はルームに所属していません`)
             return
         }
         const room = user.room
         if(!user.isHost()) {
-            console.log(`${data.userId}はホストではありません`)
+            console.log(`${socket.id}はホストではありません`)
             return
         }
         room.members.forEach(user => {
@@ -285,16 +282,16 @@ io.on(conf.ON.CONNECTION, (socket) => {
 
     socket.on(conf.ON.PLAYER_READY, (data) => {
         console.log(`**ON** ${conf.ON.PLAYER_READY}`)
-        if(typeof(data.userId) != 'string') {
+        if(typeof(socket.id) != 'string') {
             console.log(`userIdが存在しません`)
             return
         }
-        if(!data.userId in users) {
-            console.log(`${data.userId}はログインしていません`)
+        if(!socket.id in users) {
+            console.log(`${socket.id}はログインしていません`)
             return
         }
 
-        const user = users[data.userId]
+        const user = users[socket.id]
         if(!user.room) {
             console.log(`${user.name}はルームに所属していません`)
             return
@@ -305,37 +302,37 @@ io.on(conf.ON.CONNECTION, (socket) => {
 
     socket.on(conf.ON.START_GAME, (data) => {
         console.log(`**ON** ${conf.ON.START_GAME}`)
-        if(typeof(data.userId) != 'string') {
+        if(typeof(socket.id) != 'string') {
             console.log(`userIdが存在しません`)
             return
         }
-        if(!data.userId in users) {
-            console.log(`${data.userId}はログインしていません`)
+        if(!socket.id in users) {
+            console.log(`${socket.id}はログインしていません`)
             return
         }
 
-        const user = users[data.userId]
+        const user = users[socket.id]
         if(user.room) user.room.start(io)
     })
 
     socket.on(conf.ON.SEND_IMAGE, (data) => {
         console.log(`**ON** ${conf.ON.SEND_IMAGE}`)
-        console.log(data.userId)
+        console.log(socket.id)
         if(!data.buffer) {
             console.log(`bufferが存在しません`)
             return
         }
-        if(!data.userId) {
+        if(!socket.id) {
             console.log(`userIdが存在しません`)
             return
         }
-        if(!data.userId in users) {
-            console.log(`${data.userId}はログインしていません`)
+        if(!socket.id in users) {
+            console.log(`${socket.id}はログインしていません`)
             return
         }
 
         const buffer = data.buffer
-        const user = users[data.userId]
+        const user = users[socket.id]
         try {
             Vision.getInstance().detect(buffer)
                 .then((value) => {
@@ -351,24 +348,24 @@ io.on(conf.ON.CONNECTION, (socket) => {
 
     socket.on(conf.ON.REQUIRE_RESULT, (data, ack) => {
         console.log(`**ON** ${conf.ON.REQUIRE_RESULT}`)
-        if(typeof(data.userId) != 'string') {
+        if(typeof(socket.id) != 'string') {
             console.log(`userIdが存在しません`)
             return
         }
-        if(!data.userId in users) {
-            console.log(`${data.userId}はログインしていません`)
+        if(!socket.id in users) {
+            console.log(`${socket.id}はログインしていません`)
             return
         }
-        if(!users[data.userId]) {
-            console.log(`${data.userId}の実態がありません`)
+        if(!users[socket.id]) {
+            console.log(`${socket.id}の実態がありません`)
             return
         }
-        if(!users[data.userId].room) {
-            console.log(`${users[data.userId].name} はRoomに所属していません`)
+        if(!users[socket.id].room) {
+            console.log(`${users[socket.id].name} はRoomに所属していません`)
             return
         }
 
-        const user = users[data.userId]
+        const user = users[socket.id]
         socket.emit(conf.EMIT.SEND_RESULT, user.room.result, () => {
             console.log(`l.415 ACK: ${conf.EMIT.SEND_RESULT}`)
             user.gotResult()
@@ -384,16 +381,16 @@ io.on(conf.ON.CONNECTION, (socket) => {
 
     socket.on(conf.ON.LOGOUT, (data) => {
         console.log(`**ON** ${conf.ON.LOGOUT}`)
-        if(!data.userId) {
+        if(!socket.id) {
             console.log(`userIdが存在しません`)
             return
         }
-        if(!data.userId in users) {
-            console.log(`${data.userId}はログインしていません`)
+        if(!socket.id in users) {
+            console.log(`${socket.id}はログインしていません`)
             return
         }
 
-        const userId = data.userId
+        const userId = socket.id
         const user = users[userId]
         socket.broadcast.emit(conf.EMIT.SEND_MESSAGE, `${user.name} がログアウトしました`)
         if(userId in users) {
@@ -404,6 +401,7 @@ io.on(conf.ON.CONNECTION, (socket) => {
 
     socket.on('disconnect', (data) => {
         console.log(`**ON** ${socket.id} DISCONNECTED`)
+        delete users[socket.id]
     })
 })
 

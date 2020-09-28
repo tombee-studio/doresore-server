@@ -34,34 +34,34 @@ export default class Room {
         })
         this._host = null
         this._usedColor = ['yellow','blue','red']
-        this.members = new Proxy([], {
-            set: (target, property, val, receiver) => {
-                Reflect.set(target, property, val, receiver)
-                if(io && property != 'length') {
-                    console.log(`**EMIT** ${conf.EMIT.SEND_ROOM_DATA}`)
-                    io.sockets.in(this.room_id)
-                        .emit(conf.EMIT.SEND_ROOM_DATA, this.getJoinRoomData())
-                    if(val._isHost) {
-                        io.sockets.in(this.room_id)
-                            .emit('is ok', this.ready)
-                    }
-                }
-                return true
-            },
-            deleteProperty: (target, property) => {
-                Reflect.deleteProperty(target, property)
-                if(io && property != 'length') {
-                    console.log(`**EMIT** ${conf.EMIT.SEND_ROOM_DATA}`)
-                    io.sockets.in(this.room_id)
-                        .emit(conf.EMIT.SEND_ROOM_DATA, this.getJoinRoomData())
-                    if(val._isHost) {
-                        io.sockets.in(this.room_id)
-                            .emit('is ok', this.ready)
-                    }
-                }
-                return true
-            }
-        })
+        this.members = [] 
+        // new Proxy(, {
+        //     set: (target, property, val, receiver) => {
+        //         Reflect.set(target, property, val, receiver)
+        //         if(io && property != 'length') {
+        //             console.log(`**EMIT** ${conf.EMIT.SEND_ROOM_DATA}`)
+        
+        //             if(val._isHost) {
+        //                 io.sockets.in(this.room_id)
+        //                     .emit('is ok', this.ready)
+        //             }
+        //         }
+        //         return true
+        //     },
+        //     deleteProperty: (target, property) => {
+        //         Reflect.deleteProperty(target, property)
+        //         if(io && property != 'length') {
+        //             console.log(`**EMIT** ${conf.EMIT.SEND_ROOM_DATA}`)
+        //             io.sockets.in(this.room_id)
+        //                 .emit(conf.EMIT.SEND_ROOM_DATA, this.getJoinRoomData())
+        //             if(val._isHost) {
+        //                 io.sockets.in(this.room_id)
+        //                     .emit('is ok', this.ready)
+        //             }
+        //         }
+        //         return true
+        //     }
+        // })
     }
 
     get result() {
@@ -123,7 +123,7 @@ export default class Room {
     getJoinRoomData() {
         const membersData = this.members.map((user) => {
             return {
-                'userId': user.user_id,
+                'userId': user.twitterId,
                 'user_name': user.name,
                 'icon': user.icon,
                 'your_host': user.isHost,
@@ -135,7 +135,7 @@ export default class Room {
             'room': this.name,
             'pass': this.password,
             'members': `${this.members.length}/${this.numMembers}`,
-            'hostId': this._host.user_id,
+            'hostId': this._host.twitterId,
             'number': membersData.length
         }
 
@@ -148,13 +148,16 @@ export default class Room {
     join(io, user) {
         user.color = this._usedColor.pop()
         this.members.push(user)
+
+        if(io) io.sockets.in(this.room_id)
+            .emit(conf.EMIT.SEND_ROOM_DATA, this.getJoinRoomData())
     }
 
     host(io, user) {
         this._host = user
         this.join(io, user)
-        if(io)
-            io.sockets.in(this.room_id).emit(conf.EMIT.SEND_MESSAGE, `${this.name} のホストは ${user.name} になりました`)
+        if(io) io.sockets.in(this.room_id)
+            .emit(conf.EMIT.SEND_ROOM_DATA, this.ready)
     }
 
     start(io) {
